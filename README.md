@@ -2,4 +2,4 @@
 
 This is a hexo blog.
 
-Demo: [http://blog.xmxin.top]
+Demo: http://blog.xmxin.top
