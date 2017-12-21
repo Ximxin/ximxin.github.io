@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="author" content="西门信"><link rel="alternative" href="/atom.xml" title="西门信's Blog" type="application/atom+xml"><link rel="icon" href="/favicon.png"><title>Ubuntu or Debian架设OpenVPN服务器 - 西门信's Blog</title><link rel="stylesheet" href="/css/main.css"><link rel="stylesheet" href="/js/fancybox/jquery.fancybox.min.css"><!--[if lt IE 9]><script>(function(a,b){a="abbr article aside audio bdi canvas data datalist details dialog figcaption figure footer header hgroup main mark meter nav output progress section summary template time video".split(" ");for(b=a.length-1;b>=0;b--)document.createElement(a[b])})()</script><![endif]--><script src="/js/jquery-3.1.1.min.js"></script><script src="/js/fancybox/jquery.fancybox.min.js"></script></head><body style="opacity:0;"><header class="head"><h1 class="head-title u-fl"><a href="/">西门信's Blog</a></h1><nav class="head-nav u-fr"><ul class="head-nav__list"><li class="head-nav__item"><a class="head-nav__link" href="/archives">Please Onclick.(请点击食用)</a></li></ul></nav></header><main class="main"><article class="post"><header class="post__head"> <time class="post__time" datetime="2017-12-21T00:51:54.000Z">December 21, 2017</time><h1 class="post__title"><a href="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/">Ubuntu or Debian架设OpenVPN服务器</a></h1><div class="post__main echo"><h3 id="1-安装OpenVPN"><a href="#1-安装OpenVPN" class="headerlink" title="1 安装OpenVPN"></a>1 安装OpenVPN</h3><p>OpenVPN在Ubuntu or Debian的默认仓库中，所以你可以直接使用apt安装。我还会安装easy-rsa，使用它帮助我们设置CA。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo apt-get update</span><br><span class="line">$ sudo apt-get install openvpn easy-rsa</span><br></pre></td></tr></table></figure>
+<h3 id="2-构建CA"><a href="#2-构建CA" class="headerlink" title="2 构建CA"></a>2 构建CA</h3><p>OpenVPN是使用TLS/SSL协议的VPN。也就是说客户端和服务器之间的流量是加密的，证书登场。</p>
+<p>为了生成可信任的证书，我们首先设置一个简单CA。</p>
+<p>复制easy-rsa的模版目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ make-cadir ~/openvpn-ca</span><br><span class="line">$ <span class="built_in">cd</span> ~/openvpn-ca</span><br></pre></td></tr></table></figure>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-one.png" alt="This is a image"></p>
+<p>配置CA环境变量：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vim vars</span><br></pre></td></tr></table></figure>
+<p>找到如下一段：</p>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-two.png" alt="This is a image"></p>
+<p>上面的这些值随便添，但是不能为空：</p>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-three.png" alt="This is a image"></p>
+<p>在上面一段的下面有一个KEY_NAME，把值改为server：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">export</span> KEY_NAME=<span class="string">"server"</span></span><br></pre></td></tr></table></figure>
+<p>保存退出。</p>
+<p>使变量生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">source</span> vars</span><br></pre></td></tr></table></figure>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-four.png" alt="This is a image"></p>
+<p>构建CA：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ./clean-all</span><br><span class="line">$ ./build-ca</span><br></pre></td></tr></table></figure>
+<p>一直回车；</p>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-five.png" alt="This is a image"></p>
+<h3 id="3-生成服务端证书、密钥"><a href="#3-生成服务端证书、密钥" class="headerlink" title="3 生成服务端证书、密钥"></a>3 生成服务端证书、密钥</h3><p>生成证书和Key：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./build-key-server server</span><br></pre></td></tr></table></figure>
+<p>一直回车，先不要设置密码：</p>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-six.png" alt="This is a image"></p>
+<p>生成Diffie-Hellman key：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./build-dh</span><br></pre></td></tr></table></figure>
+<p>等待几分钟；</p>
+<p>生成HMAC签名加强TLS认证：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ openvpn --genkey --secret keys/ta.key</span><br></pre></td></tr></table></figure>
+<h3 id="4-生成客户端证书、密钥"><a href="#4-生成客户端证书、密钥" class="headerlink" title="4 生成客户端证书、密钥"></a>4 生成客户端证书、密钥</h3><p>我们可以使用客户端机器生成，然后让服务器签名。为了简单，我在服务器生成。</p>
+<p>下面我为一个客户端生成证书，如果你有多个客户端可以重复这个过程。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ ./build-key client1</span><br></pre></td></tr></table></figure>
+<p>同样一直回车，密码空。</p>
+<h3 id="5-配置OpenVPN服务"><a href="#5-配置OpenVPN服务" class="headerlink" title="5 配置OpenVPN服务"></a>5 配置OpenVPN服务</h3><p>把上面生成的证书复制到对应的OpenVPN目录：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ <span class="built_in">cd</span> ~/openvpn-ca/keys</span><br><span class="line">$ sudo cp ca.crt ca.key server.crt server.key ta.key dh2048.pem /etc/openvpn</span><br></pre></td></tr></table></figure>
+<p>创建OpenVPN配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ gunzip -c /usr/share/doc/openvpn/examples/sample-config-files/server.conf.gz;vim /etc/openvpn/server.conf</span><br></pre></td></tr></table></figure>
+<p>编辑OpenVPN配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vim /etc/openvpn/server.conf</span><br></pre></td></tr></table></figure>
+<p>去掉如下几行的注释：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">push <span class="string">"redirect-gateway def1 bypass-dhcp"</span></span><br><span class="line"></span><br><span class="line">push <span class="string">"dhcp-option DNS 208.67.222.222"</span></span><br><span class="line">push <span class="string">"dhcp-option DNS 208.67.220.220"</span></span><br><span class="line"></span><br><span class="line">user nobody</span><br><span class="line">group nogroup</span><br></pre></td></tr></table></figure>
+<p>每行配置上方都有详细的解释；</p>
+<p>去掉下面一行的注释，并在下面添加一行：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tls-auth ta.key 0 <span class="comment"># This file is secret</span></span><br><span class="line">key-direction 0</span><br></pre></td></tr></table></figure>
+<h3 id="6-打开IP转发"><a href="#6-打开IP转发" class="headerlink" title="6 打开IP转发"></a>6 打开IP转发</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo vim /etc/sysctl.conf</span><br></pre></td></tr></table></figure>
+<p>去掉下面一行的注释：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">net.ipv4.ip_forward=1</span><br></pre></td></tr></table></figure>
+<p>使生效：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ sudo sysctl -p</span><br></pre></td></tr></table></figure>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ sudo systemctl start openvpn@server</span><br><span class="line">$ sudo systemctl <span class="built_in">enable</span> openvpn@server</span><br></pre></td></tr></table></figure>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-seven.png" alt="This is a image"></p>
+<p>OpenVPN使用的tun0网络接口：</p>
+<p><img src="/2017/12/21/Ubuntu-or-Debian架设OpenVPN服务器/Demo-night.png" alt="This is a image"></p>
+<h3 id="7-生成OpenVPN客户端使用的ovpn"><a href="#7-生成OpenVPN客户端使用的ovpn" class="headerlink" title="7 生成OpenVPN客户端使用的ovpn"></a>7 生成OpenVPN客户端使用的ovpn</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ mkdir -p ~/client/ovpn</span><br></pre></td></tr></table></figure>
+<p>复制模版配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ cp /usr/share/doc/openvpn/examples/sample-config-files/client.conf ~/client</span><br></pre></td></tr></table></figure>
+<p>编辑：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ vim client.conf</span><br></pre></td></tr></table></figure>
+<p>找到remote一段：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">remote server_IP_or_domain 1194</span><br></pre></td></tr></table></figure>
+<p>把server_IP_or_domain替换为OpenVPN服务IP或域名。</p>
+<p>去掉如下两行的注释：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">user nobody</span><br><span class="line">group nogroup</span><br></pre></td></tr></table></figure>
+<p>注释ca, cert 和 key的那三行。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># ca [inline]</span></span><br><span class="line"><span class="comment"># cert [inline]</span></span><br><span class="line"><span class="comment"># key [inline]</span></span><br></pre></td></tr></table></figure>
+<p>找到tls-auth一段，去掉注释：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">key-direction 1</span><br></pre></td></tr></table></figure>
+<p>生成ovpn文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ cat ~/client/client.conf &lt;(<span class="built_in">echo</span> -e <span class="string">'&lt;ca&gt;'</span>) ~/openvpn-ca/keys/ca.crt &lt;(<span class="built_in">echo</span> -e <span class="string">'&lt;/ca&gt;\n&lt;cert&gt;'</span>) ~/openvpn-ca/keys/client1.crt &lt;(<span class="built_in">echo</span> -e <span class="string">'&lt;/cert&gt;\n&lt;key&gt;'</span>) ~/openvpn-ca/keys/client1.key &lt;(<span class="built_in">echo</span> -e <span class="string">'&lt;/key&gt;\n&lt;tls-auth&gt;'</span>) ~/openvpn-ca/keys/ta.key &lt;(<span class="built_in">echo</span> -e <span class="string">'&lt;/tls-auth&gt;'</span>) &gt; ~/client/ovpn/client1.ovpn</span><br></pre></td></tr></table></figure>
+<p>上面命令其实就是把第4步生成的客户端证书client.cet、client1.key和服务器证书ca.crt、ta.key组合在一起。</p>
+<p>把~/client/ovpn/client1.ovpn文件传给客户端；OpenVPN客户端就可以使用这个文件连接了，怎么连接就不说了。</p>
+<p>本文copy至：<a href="http://blog.topspeedsnail.com/archives/4860" target="_blank" rel="noopener">[Ubuntu 16.04 架设 OpenVPN 服务器 - WTF Daily Blog]</a></p>
+</div></header><footer class="post__foot u-cf"><ul class="post__tag u-fl"><li class="post__tag__item"><a class="post__tag__link" href="/tags/Linux/">Linux</a></li></ul></footer></article><section class="reward"> <a class="btn-reward" href="#">打赏</a><div class="reward-wrapper clearfix"><img src="/img/wechat.png" title="微信"></div></section><div class="comments" id="lv-container" data-id="city" data-uid="MTAyMC8zMjMyNi84ODg3"><script>(function(d, s) {var j, e = d.getElementsByTagName(s)[0];if (typeof LivereTower === 'function') { return; } j = d.createElement(s);j.src = 'https://cdn-city.livere.com/js/embed.dist.js';j.async = true;e.parentNode.insertBefore(j, e);})(document, 'script');</script></div></main><footer class="foot"><div class="foot-copy">&copy; 2017 西门信</div></footer><script src="/js/scroller.js"></script><script src="/js/main.js"></script></body></html>
