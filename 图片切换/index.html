@@ -1,0 +1,124 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<meta charset="utf-8">
+	<title>实例：图片切换</title>
+</head>
+<style>
+* { margin: 0; padding: 0; }
+body { font-size: 16px; font-family: "微软雅黑","宋体",Serif; }
+.clearfix:after { content: "."; display: block; height: 0; clear: both; visibility: hidden; }
+.clearfix { *+height: 1%; }
+	#max-box { border: 1px #fff solid; margin: 0 auto; margin-top: 200px; height: 920px; width: 620px; background: #222; }
+	#max-box h5 { font-size: 1.2em; margin-top: 20px; }
+	#max-box p,#max-box h5 { text-align: center; line-height: 2em; color: #fff; }
+	#max-box ul { list-style: none; }
+	#max-box #li-border { margin-top: 20px; border-top: 1px #fff solid; border-bottom: 1px #fff solid; padding: 5px 0px;; }
+	#max-box li { border: 1px #fff solid; padding: 5px; float: left; position: relative; margin-left: 0px; border-radius: 0px; background: #222; border-left: 0; }
+	#max-box #ordinary { margin-left: 200px; border-left: 1px #fff solid; }
+	#max-box li a { text-decoration: none; color: #fff; font-weight: bold; }
+	#max-box li,#max-box li a { transition: all 1s; }
+	#max-box li:hover { border-color: #fff; background: #fff; }
+	#max-box li a:hover { color: #000; }
+	#max-box #image-box { height: 600px; width: 600px; border: 1px #fff solid; float: left; margin-left: 9px; margin-top: 75px; overflow: auto; line-height: 600px; background: #333; border-radius: 2px; }
+	#max-box img { max-height: 600px; max-width: 600px; vertical-align: middle; }
+	#max-box #left-btn,#max-box #right-btn,#max-box #math-box,#max-box #text-box { position: absolute; margin-top: 356px; opacity: 0.8; }
+	#max-box #left-btn,#max-box #right-btn { width: 16px; height: 22px; text-align: center; border-left: 1px #fff solid; }
+	#max-box #left-btn { margin-left: 12px; }
+	#max-box #right-btn { margin-left: 579px; }
+	#max-box #left-btn a,#max-box #right-btn a { color: #fff; font-weight: bold; }
+	#max-box #left-btn a:hover,#max-box #right-btn a:hover { color: #000; }
+	#max-box #left-btn:hover,#max-box #right-btn:hover { background: #fff; }
+	#max-box #math-box,#max-box #text-box { margin-left: 10px; width: 590px; border: 0; }
+	#max-box #math-box p,#max-box #text-box p { color: #fff; font-weight: bold; }
+	#max-box #math-box:hover,#max-box #text-box:hover { border-color: #222; background: #222; }
+	#max-box #math-box { margin-top: 76px; border-radius: 2px 2px 0px 0px; }
+	#max-box #text-box { margin-top: 634px; border-radius: 0px 0px 2px 2px; }
+</style>
+<body>
+	<div id="max-box">
+		<h5>图片切换</h5>
+		<p id="prompt-info">当前为普通模式</p>
+		<div id="li-border" class="clearfix">
+			<ul>
+				<li id="ordinary"><a href="javascript:;">普通模式</a></li>
+				<li id="blog"><a href="https://xmxin.top">返回博客</a></li>
+				<li id="cycle"><a href="javascript:;">循环模式</a></li>
+			</ul>
+		</div>
+		<div id="image-box">
+			<img id="image" src="" alt="">
+		</div>
+		<ul>
+			<li id="left-btn"><a href="javascript:;"><</a></li>
+			<li id="right-btn"><a href="javascript:;">></a></li>
+			<li id="math-box"><p id="math-info">数字正在计算中...</p></li>
+			<li id="text-box"><p id="text-info">文字正在加载中...</p></li>
+		</ul>
+	</div>
+<script type="text/javascript">
+	var ObOrdinary = document.getElementById('ordinary')
+	var ObCycle = document.getElementById('cycle')
+	var ObPromptInfo = document.getElementById('prompt-info')
+	var ObImage = document.getElementById('image')
+	var ObLeft = document.getElementById('left-btn')
+	var ObRight = document.getElementById('right-btn')
+	var ObMathInfo = document.getElementById('math-info')
+	var ObTextInfo = document.getElementById('text-info')
+	var Images = [ 'img/1.jpg','img/2.jpg','img/3.jpg','img/4.jpg','img/5.jpg','img/6.jpg','img/7.jpg','img/8.jpg','img/9.jpg','img/10.jpg','img/11.jpg','img/12.jpg','img/13.jpg','img/14.jpg','img/15.jpg','img/16.jpg','img/17.jpg','img/18.jpg','img/19.jpg' ];
+	var TextInfos = [ '说明1','说明2','说明3','说明4','说明5','说明6','说明7','说明8','说明9','说明10','说明11','说明12','说明13','说明14','说明15','说明16','说明17','说明18','说明19' ];
+	var LengthMath = Images.length;
+	var num = 0;
+	var x = 1;
+	ObOrdinary.onclick = function(){
+		x--
+		ObPromptInfo.innerHTML="当前为普通模式";
+		if(x <= 0){
+			x = 1;
+		}
+	}
+	ObCycle.onclick = function(){
+		x++
+		ObPromptInfo.innerHTML="当前为循环模式";
+		if(x => 3){
+			x = 2;
+		}
+	}
+	ObLeft.onclick = function(){
+		num--
+		if(x == 1){
+			if(num <= -1){
+				num = 0;
+				alert('已经是第一张咯！');
+			}
+		}else if(x == 2){
+			if(num <= -1){
+				num = LengthMath - 1;
+			}
+		}
+		ObImage.src = Images[num];
+		ObMathInfo.innerHTML =  num + 1 + ' / ' + LengthMath;
+		ObTextInfo.innerHTML = TextInfos[num];
+	}
+	ObRight.onclick = function(){
+		num++
+		if(x == 1){
+			if(num >= LengthMath){
+				num = LengthMath - 1;
+				alert('已经是最后一张咯！');
+			}
+		}else if(x == 2){
+			if(num >= LengthMath){
+				num = 0;
+			}
+		}
+		ObImage.src = Images[num];
+		ObMathInfo.innerHTML =  num + 1 + ' / ' + LengthMath;
+		ObTextInfo.innerHTML = TextInfos[num];
+	}
+	ObImage.src = 'img/1.jpg';
+	ObMathInfo.innerHTML =  num + 1 + ' / ' + LengthMath;
+	ObTextInfo.innerHTML = TextInfos[num];
+</script>
+</body>
+</html>
